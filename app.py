@@ -22,7 +22,7 @@ Model.db = Database('school.db')
 Model.connection = Model.db.connect()
 
 class students(Model):
-    id = IntegerField()
+    studentID = IntegerField()
     name = TextField()
     nickname = TextField()
     age = IntegerField()
@@ -31,35 +31,72 @@ class students(Model):
 
 class lessons(Model):
     name = TextField()
-    studentID = IntegerField()
-    lessonsID = IntegerField()
+    lessonID = IntegerField()
 
+class registered_lessons(Model):
+    id = IntegerField()
+    studentID = IntegerField()
+    lessoneID = IntegerField()
 # functiones ----------------------------------------------------------------------------------
+def input_data(type_data, message):
+    while True:
+        try:
+            data = input(message)
+            if type_data == 'age':
+                data = int(data)
+                if data <= 120 and data > 0:
+                    return data
+            elif type_data == 'id':
+                data = int(data)
+                if data > 0:
+                    return data
+            elif type_data == 'name':
+                if len(data) < 20 and data.isalpha():
+                    return data.lower()
+            elif type_data == 'text':
+                if len(data) < 50 :
+                    return data
+        except ValueError: 
+            pass
+        print('Data is invalid')
+
 def create_student():
     print("Enter the new student’s information:")
     
-    student_ID = int(input('student ID: '))
-    student_name = input('student name: ')
-    student_nickname = input('student nickname: ')
-    student_age = int(input('student age: '))
-    student_school_class = input('student school class: ')
-    student_lessons = input('\nStudent lessons example: Lesson1-Lesson2-Lesson5 :')
-    ok = input('Enter (y) to confirm or enter any button to cancel: ')
+    # Take a unique ID
+    while True:
+        student_ID = input_data('id', 'student ID: ')
+        if student.get('studentID', student_ID) == None:
+            break
+        print('The ID is reserved. Enter another ID')
+
+    student_name = input_data('name', 'student name: ')
+    student_nickname = input_data('name', 'student nickname: ')
+    student_age = input_data('age', 'student age, any number of 1 to 120: ')
+    student_school_class = input_data('text', 'student school class: ')
+    student_lessons = input_data('text', '\nStudent lessons example: Lesson1-Lesson2-Lesson5 :')
+    ok = input_data('text', 'Enter (y) to confirm or enter any button to cancel: ')
 
     if (ok == 'y' or ok == 'Y'):
-        student.create(id=student_ID, name=student_name, nickname=student_nickname, age=student_age, school_class=student_school_class, registration_date=datetime.now())
+        student.create(studentID=student_ID, name=student_name, nickname=student_nickname, age=student_age, school_class=student_school_class, registration_date=datetime.now())
         
-        arr = student_lessons.split('-')
-        for item in arr:
-            lesson.create(name=item, studentID=student_ID)
-
+        # Adding new lessons + lessons in which the student is registered
+        lessons_arr = student_lessons.split('-')
+        for item in lessons_arr:
+            if lesson.get('name', item) == None:
+                lesson.create(name=item)
+                
+            lesson_ID = lesson.get('name', item)['lessonID']
+            if registered_lesson.find('studentID = ' + str(student_ID) + ' AND lessonID ', '=', lesson_ID) == None:
+                registered_lesson.create(studentID=student_ID, lessonID=lesson_ID)
+            
         print('\nThe operation was completed successfully')
     else:
         print('\nIt was rejected or the data entered is incorrect')
 
 def show_student():
-    student_ID = int(input('Enter student ID: '))
-    student_info = student.get(student_ID)
+    student_ID = input_data('id', 'Enter student ID: ')
+    student_info = student.get('studentID', student_ID)
     if (student_info == None):
         print('Student not found')
     else:
@@ -67,52 +104,62 @@ def show_student():
         print(student_info)
         
         print('\n-------------Student lessons-------------')
-        student_lessons = lesson.find('studentID', '=', student_ID)
+        student_lessons = registered_lesson.find('studentID', '=', student_ID)
+        count = 0
         for item in student_lessons:
-            print(item['name'])
+            record = lesson.get('lessonID', item['lessonID'])
+            count += 1
+            print(count, '- ', record['name'])
 
 def delete_student():
-    student_ID = int(input('Enter student ID: '))
-    student_info = student.get(student_ID)
+    student_ID = input_data('id', 'Enter student ID: ')
+    student_info = student.get('studentID', student_ID)
     if (student_info == None):
         print('Student not found')
     else:
         print(student_info)
-        ok = input('If you want to delete the student, enter (y) or any key to cancel: ')
+        ok = input_data('text', 'Enter (y) to confirm or enter any button to cancel: ')
         if (ok == 'y' or ok == 'Y'):
-            lesson._findAndDelete('studentID', '=', student_ID)
-            student._deleteByID(student_ID)
+            registered_lesson._findAndDelete('studentID', '=', student_ID)
+            student._deleteByID('studentID', student_ID)
             print('\nThe operation was completed successfully')
         else:
             print('\nIt was rejected')
 
 def update_student():
-    student_ID = int(input('Enter student ID: '))
-    student_info = student.get(student_ID)
+    student_ID = input_data('id', 'Enter student ID: ')
+    student_info = student.get('studentID', student_ID)
     if (student_info == None):
         print('Student not found')
     else:
         print(student_info)
         print('\nEnter the student\'s new information: ')
 
-        student_name = input('student name: ')
-        student_nickname = input('student nickname: ')
-        student_age = int(input('student age: '))
-        student_school_class = input('student school class: ')
-        student_lessons = input('\nStudent lessons example: Lesson1-Lesson2-Lesson5 :')
+        student_name = input_data('name', 'student name: ')
+        student_nickname = input_data('name', 'student nickname: ')
+        student_age = input_data('age', 'student age, any number of 1 to 120: ')
+        student_school_class = input_data('text', 'student school class: ')
+        student_lessons = input_data('text', '\nStudent lessons example: Lesson1-Lesson2-Lesson5 :')
 
-        ok = input('Enter (y) to confirm or enter any button to cancel: ')
+        ok = input_data('text', 'Enter (y) to confirm or enter any button to cancel: ')
         if (ok == 'y' or ok == 'Y'):
             student.name = student_name
             student.nickname = student_nickname
             student.age = student_age
             student.school_class = student_school_class
-            student._update(student_ID)
 
-            lesson._findAndDelete('studentID', '=', student_ID)
-            arr = student_lessons.split('-')
-            for item in arr:
-                lesson.create(name=item, studentID=student_ID)
+            registered_lesson._findAndDelete('studentID', '=', student_ID)
+            student._update("studentID", student_ID)
+
+            # Adding new lessons + lessons in which the student is registered
+            lessons_arr = student_lessons.split('-')
+            for item in lessons_arr:
+                if lesson.get('name', item) == None:
+                    lesson.create(name=item)
+                    
+                lesson_ID = lesson.get('name', item)['lessonID']
+                if registered_lesson.find('studentID = ' + str(student_ID) + ' AND lessonID ', '=', lesson_ID) == None:
+                    registered_lesson.create(studentID=student_ID, lessonID=lesson_ID)
 
             print('\nThe operation was completed successfully')
         else:
@@ -122,7 +169,7 @@ def update_student():
 if __name__ == '__main__':
     student = students()
     lesson = lessons()
-    
+    registered_lesson = registered_lessons()
     play = True
     while play:
         chosen = input("""

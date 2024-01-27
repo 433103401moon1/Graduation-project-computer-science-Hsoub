@@ -73,36 +73,42 @@ class Model:
         return records.fetchall()
     
     @classmethod
-    def get(cls, id):
-        sql = f'SELECT * FROM {cls._get_table_name()} WHERE id = {id}'
+    def get(cls, col_name, val):
+        sql = f'SELECT * FROM {cls._get_table_name()} WHERE {col_name} = "{val}"'
         record = cls.connection.execute(sql)
-        return dict(record.fetchone())
+        result = record.fetchone()
+        if result is None:
+            return None
+        return dict(result)
     
     @classmethod
-    def find(cls, col_name, operator, value):
+    def find(cls, col_name, operator, val):
         if operator == 'LIKE':
             value = '%' + value + '%'
         
-        sql = f'SELECT * FROM {cls._get_table_name()} WHERE {col_name} {operator} "{value}"'
+        sql = f'SELECT * FROM {cls._get_table_name()} WHERE {col_name} {operator} "{val}"'
         records = cls.connection.execute(sql)
-        return [dict(row) for row in records.fetchall()]
+        result = [dict(row) for row in records.fetchall()]
+        if len(result) == 0:
+            return None
+        return result
     
     
-    def _update(cls , id):
+    def _update(cls, col_name, val):
         new_values = []
         for key, value in cls._get_values().items():
             new_values.append(f'{key} = "{value}"')
         
         expression = ', '.join(new_values)
-        sql = f'UPDATE {cls._get_table_name()} SET {expression} WHERE id = {id}'
+        sql = f'UPDATE {cls._get_table_name()} SET {expression} WHERE {col_name} = {val}'
         cls.connection.execute(sql)
         cls.connection.commit()
         cls._saved = True
 
 
     @classmethod
-    def _deleteByID(cls, id):
-        sql = f'DELETE FROM {cls._get_table_name()} WHERE id = {id}'
+    def _deleteByID(cls, col_name, id):
+        sql = f'DELETE FROM {cls._get_table_name()} WHERE {col_name} = {id}'
         cls.connection.execute(sql)
         cls.connection.commit()
         cls._saved = True
