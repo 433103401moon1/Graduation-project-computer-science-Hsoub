@@ -38,6 +38,25 @@ class registered_lessons(Model):
     studentID = IntegerField()
     lessoneID = IntegerField()
 # functiones ----------------------------------------------------------------------------------
+def clear_excess_spaces(arr):
+    count = 0
+    for i in arr:
+        item =''
+        char = -1
+        for j in i:
+            char += 1
+            # test
+            # print(f'char={char}, len(i)={len(i)}, arr={arr}') 
+            if len(i) == char+1 and j == ' ' :
+                continue
+            if j == ' ' and item =='':
+                continue
+            if j == ' ' and item !='' and i[char+1] == ' ':
+                continue
+            item += j
+        arr[count] = item
+        count += 1
+    return arr
 def input_data(type_data, message):
     while True:
         try:
@@ -54,7 +73,7 @@ def input_data(type_data, message):
                 if len(data) < 20 and data.isalpha():
                     return data.lower()
             elif type_data == 'text':
-                if len(data) < 50 :
+                if len(data) < 70 :
                     return data
         except ValueError: 
             pass
@@ -82,6 +101,7 @@ def create_student():
         
         # Adding new lessons + lessons in which the student is registered
         lessons_arr = student_lessons.split('-')
+        lessons_arr = clear_excess_spaces(lessons_arr) # clear bad spaces
         for item in lessons_arr:
             if lesson.get('name', item) == None:
                 lesson.create(name=item)
@@ -153,6 +173,7 @@ def update_student():
 
             # Adding new lessons + lessons in which the student is registered
             lessons_arr = student_lessons.split('-')
+            lessons_arr = clear_excess_spaces(lessons_arr) # clear bad spaces
             for item in lessons_arr:
                 if lesson.get('name', item) == None:
                     lesson.create(name=item)
